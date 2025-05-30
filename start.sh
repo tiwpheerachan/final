@@ -1,2 +1,3 @@
 #!/bin/bash
-gunicorn main:app --bind 0.0.0.0:$PORT
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:$PORT
+
