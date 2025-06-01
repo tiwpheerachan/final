@@ -1,25 +1,12 @@
 <!DOCTYPE html>
-<html lang="th">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login with Shopee</title>
+    <title>Shopee Login</title>
 </head>
-<body style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #f5f5f5;">
-  <button onclick="loginShopee()" style="padding: 1rem 2rem; background-color: #ee4d2d; color: white; border: none; border-radius: 10px; font-size: 1.2rem;">
-    Login with Shopee
-  </button>
-
-  <script>
-    function loginShopee() {
-      const partner_id = 1280076; // แก้เป็นของคุณ
-      const redirect = encodeURIComponent("https://shopee-api-database.onrender.com/callback"); // ต้องตรงกับใน Shopee Console
-      const timestamp = Math.floor(Date.now() / 1000);
-
-      const url = `https://partner.shopeemobile.com/api/v2/shop/auth_partner?partner_id=${partner_id}&timestamp=${timestamp}&redirect=${redirect}`;
-
-      window.location.href = url;
-    }
-  </script>
+<body>
+    <h1>Login with Shopee</h1>
+    <a href="{{ login_url }}">
+        <button>Login with Shopee</button>
+    </a>
 </body>
 </html>
