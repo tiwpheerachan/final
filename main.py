@@ -1,12 +1,11 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
 import os
 import time
 import hmac
 import hashlib
 import httpx
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 app = FastAPI()
 
@@ -15,16 +14,17 @@ PARTNER_ID = int(os.getenv("PARTNER_ID"))
 PARTNER_KEY = os.getenv("PARTNER_KEY")
 REDIRECT_URL = os.getenv("REDIRECT_URL")
 
+templates = Jinja2Templates(directory="templates")
 
-@app.get("/")
-async def root(request: Request):
+@app.get("/", response_class=HTMLResponse)
+async def login_page(request: Request):
     code = request.query_params.get("code")
     shop_id = request.query_params.get("shop_id")
 
     if code and shop_id:
         return RedirectResponse(url=f"/callback?code={code}&shop_id={shop_id}")
     
-    return {"message": "Shopee API Redirect Handler Root"}
+    return templates.TemplateResponse("login.html", {"request": request})
 
 
 @app.get("/callback")
@@ -59,7 +59,6 @@ async def callback(request: Request):
 
     data = response.json()
 
-    # สำหรับแสดงผลเบื้องต้น
     return {
         "message": "Access Token Retrieved!",
         "data": data
@@ -69,9 +68,3 @@ async def callback(request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=10000)
-
-templates = Jinja2Templates(directory="templates")
-
-@app.get("/", response_class=HTMLResponse)
-async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
