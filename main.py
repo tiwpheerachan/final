@@ -52,7 +52,7 @@ async def callback(request: Request):
     path = "/api/v2/auth/token/get"
 
     base_string = f"{PARTNER_ID}{path}{timestamp}"
-    sign = hmac.new(PARTNER_KEY.encode('utf-8'), base_string.encode('utf-8'), hashlib.sha256).hexdigest()
+    sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
 
     url = (
         f"https://partnertest-stable.shopeemobile.com{path}"
@@ -67,7 +67,8 @@ async def callback(request: Request):
         "shop_id": int(shop_id),
     }
 
-    
+    print(payload)
+    print(url)
     response = requests.post(url, json=payload)
     
     if response.status_code != 200:
