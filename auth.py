@@ -9,7 +9,7 @@ PARTNER_KEY = os.getenv("PARTNER_KEY")
 REDIRECT_URL = os.getenv("REDIRECT_URL")
 
 def generate_auth_url():
-    base_url = "https://partner.shopeemobile.com/api/v2/shop/auth_partner"
+    base_url = "https://partner.test-stable.shopeemobile.com/api/v2/shop/auth_partner"
     timestamp = int(time.time())
 
     data_to_sign = f"{PARTNER_ID}{REDIRECT_URL}{timestamp}"

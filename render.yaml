@@ -10,7 +10,7 @@ services:
       - key: PARTNER_KEY
         value: "41486946494654774e677354666f7a6d6f7856736c516c49544c7872694b5558"
       - key: REDIRECT_URL
-        value: "https://shopee-api-database.onrender.com/callback"
+        value: "https://shopee-api-database.onrender.com"
       - key: DB_HOST
         value: "aws-0-ap-southeast-1.pooler.supabase.com"
       - key: DB_NAME
@@ -32,7 +32,7 @@ services:
       - key: PARTNER_KEY
         value: "41486946494654774e677354666f7a6d6f7856736c516c49544c7872694b5558"
       - key: REDIRECT_URL
-        value: "https://shopee-api-database.onrender.com/callback"
+        value: "https://shopee-api-database.onrender.com"
       - key: DB_HOST
         value: "aws-0-ap-southeast-1.pooler.supabase.com"
       - key: DB_NAME
