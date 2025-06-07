@@ -10,20 +10,22 @@ services:
       - key: PARTNER_KEY
         value: "41486946494654774e677354666f7a6d6f7856736c516c49544c7872694b5558"
       - key: REDIRECT_URL
-        value: "https://shopee-api-database.onrender.com"
+        value: "https://final-e74d.onrender.com"
       - key: DB_HOST
-        value: "aws-0-ap-southeast-1.pooler.supabase.com"
+        value: "db.cidpacmaoaieyhgagmen.supabase.co"
+      - key: DB_PORT
+        value: "5432"
       - key: DB_NAME
         value: "postgres"
       - key: DB_USER
-        value: "postgres.sujexdliidmmmyzjsiys"
-      - key: DB_PASS
-        value: "Shd2025!"
+        value: "postgres"
+      - key: DB_PASSWORD
+        value: "S4GDQ1yBiPY56MV0"
 
   - type: cron
     name: shopee-cron
     env: python
-    schedule: "*/30 * * * *"  # รันทุก 30 นาที
+    schedule: "*/30 * * * *"
     buildCommand: pip install -r requirements.txt
     startCommand: python refresh_loop.py
     envVars:
@@ -32,12 +34,14 @@ services:
       - key: PARTNER_KEY
         value: "41486946494654774e677354666f7a6d6f7856736c516c49544c7872694b5558"
       - key: REDIRECT_URL
-        value: "https://shopee-api-database.onrender.com"
+        value: "https://final-e74d.onrender.com"
       - key: DB_HOST
-        value: "aws-0-ap-southeast-1.pooler.supabase.com"
+        value: "db.cidpacmaoaieyhgagmen.supabase.co"
+      - key: DB_PORT
+        value: "5432"
       - key: DB_NAME
         value: "postgres"
       - key: DB_USER
-        value: "postgres.sujexdliidmmmyzjsiys"
-      - key: DB_PASS
-        value: "Shd2025!"
+        value: "postgres"
+      - key: DB_PASSWORD
+        value: "S4GDQ1yBiPY56MV0"

@@ -6,16 +6,14 @@ import time
 import hmac
 import hashlib
 import httpx
-from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
 import requests
-
 
 app = FastAPI()
 
-# ENV variables
+# ✅ ENV variables (from render.yaml or environment settings)
 PARTNER_ID = int(os.getenv("PARTNER_ID"))
 PARTNER_KEY = os.getenv("PARTNER_KEY")
-REDIRECT_URL = os.getenv("REDIRECT_URL")  # example: https://your-app.onrender.com/callback
+REDIRECT_URL = os.getenv("REDIRECT_URL")  # ✅ เช่น https://final-e74d.onrender.com/callback
 
 templates = Jinja2Templates(directory="templates")
 
@@ -34,10 +32,9 @@ async def login_page(request: Request):
     )
 
     return templates.TemplateResponse("login.html", {
-            "request": request,
-            "login_url": login_url
-        })
-
+        "request": request,
+        "login_url": login_url
+    })
 
 @app.get("/callback")
 async def callback(request: Request):
@@ -47,10 +44,9 @@ async def callback(request: Request):
     if not code or not shop_id:
         return JSONResponse(status_code=400, content={"error": "Missing code or shop_id"})
 
-    # Prepare request to get access token
+    # 🔐 Get access token
     timestamp = int(time.time())
     path = "/api/v2/auth/token/get"
-
     base_string = f"{PARTNER_ID}{path}{timestamp}"
     sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
 
@@ -67,10 +63,11 @@ async def callback(request: Request):
         "shop_id": int(shop_id),
     }
 
-    print(payload)
-    print(url)
+    print("Payload:", payload)
+    print("Token URL:", url)
+
     response = requests.post(url, json=payload)
-    
+
     if response.status_code != 200:
         return JSONResponse(status_code=response.status_code, content={
             "error": "Failed to get token",
@@ -83,7 +80,6 @@ async def callback(request: Request):
         "message": "Access Token Retrieved!",
         "data": data
     }
-
 
 if __name__ == "__main__":
     import uvicorn

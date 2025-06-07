@@ -1,7 +1,7 @@
+requests
 fastapi
 uvicorn
 jinja2
 httpx
 python-dotenv
 psycopg2-binary
-requests
