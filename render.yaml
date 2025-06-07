@@ -6,9 +6,9 @@ services:
     startCommand: bash start.sh
     envVars:
       - key: PARTNER_ID
-        value: "1280076"
+        value: "1280109"  # ✅ UPDATED
       - key: PARTNER_KEY
-        value: "41486946494654774e677354666f7a6d6f7856736c516c49544c7872694b5558"
+        value: "5a4e6e4c4d4375464c57506b7a42775a77466d686c534255574267514f494a54"  # ✅ UPDATED
       - key: REDIRECT_URL
         value: "https://final-e74d.onrender.com"
       - key: DB_HOST
@@ -30,9 +30,9 @@ services:
     startCommand: python refresh_loop.py
     envVars:
       - key: PARTNER_ID
-        value: "1280076"
+        value: "1280109"  # ✅ UPDATED
       - key: PARTNER_KEY
-        value: "41486946494654774e677354666f7a6d6f7856736c516c49544c7872694b5558"
+        value: "5a4e6e4c4d4375464c57506b7a42775a77466d686c534255574267514f494a54"  # ✅ UPDATED
       - key: REDIRECT_URL
         value: "https://final-e74d.onrender.com"
       - key: DB_HOST

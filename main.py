@@ -5,15 +5,14 @@ import os
 import time
 import hmac
 import hashlib
-import httpx
 import requests
 
 app = FastAPI()
 
-# ✅ ENV variables (from render.yaml or environment settings)
-PARTNER_ID = int(os.getenv("PARTNER_ID"))
-PARTNER_KEY = os.getenv("PARTNER_KEY")
-REDIRECT_URL = os.getenv("REDIRECT_URL")  # ✅ เช่น https://final-e74d.onrender.com/callback
+# ✅ ข้อมูลจาก Shopee Console
+PARTNER_ID = int(os.getenv("PARTNER_ID", "1280109"))
+PARTNER_KEY = os.getenv("PARTNER_KEY", "5a4e6e4c4d4375464c57506b7a42775a77466d686c534255574267514f494a54")
+REDIRECT_URL = os.getenv("REDIRECT_URL", "https://final-e74d.onrender.com/callback")
 
 templates = Jinja2Templates(directory="templates")
 
@@ -63,10 +62,9 @@ async def callback(request: Request):
         "shop_id": int(shop_id),
     }
 
-    print("Payload:", payload)
-    print("Token URL:", url)
+    headers = {"Content-Type": "application/json"}
 
-    response = requests.post(url, json=payload)
+    response = requests.post(url, json=payload, headers=headers)
 
     if response.status_code != 200:
         return JSONResponse(status_code=response.status_code, content={
@@ -74,11 +72,9 @@ async def callback(request: Request):
             "details": response.text
         })
 
-    data = response.json()
-
     return {
         "message": "Access Token Retrieved!",
-        "data": data
+        "data": response.json()
     }
 
 if __name__ == "__main__":
