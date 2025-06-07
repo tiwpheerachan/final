@@ -19,8 +19,8 @@ REDIRECT_URL = os.getenv("REDIRECT_URL")  # example: https://your-app.onrender.c
 
 templates = Jinja2Templates(directory="templates")
 
-@app.get("/")
-async def login_page():
+@app.get("/", response_class=HTMLResponse)
+async def login_page(request: Request):
     timestamp = int(time.time())
     base_string = f"{PARTNER_ID}/api/v2/shop/auth_partner{timestamp}"
     sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
@@ -33,7 +33,10 @@ async def login_page():
         f"&redirect={REDIRECT_URL}"
     )
 
-    return RedirectResponse(requests.get(login_url).text)
+    return templates.TemplateResponse("login.html", {
+            "request": request,
+            "login_url": login_url
+        })
 
 
 @app.get("/callback")
