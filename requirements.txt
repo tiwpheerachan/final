@@ -3,6 +3,6 @@ uvicorn
 requests
 psycopg2-binary
 python-dotenv
-gunicorn
+uvicorn
 httpx
 jinja2
