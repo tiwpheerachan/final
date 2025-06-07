@@ -67,8 +67,8 @@ async def callback(request: Request):
         "shop_id": int(shop_id),
     }
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=payload)
+    
+    response = requests.post(url, json=payload)
     
     if response.status_code != 200:
         return JSONResponse(status_code=response.status_code, content={
