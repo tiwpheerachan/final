@@ -51,16 +51,20 @@ async def callback(request: Request):
     timestamp = int(time.time())
     path = "/api/v2/auth/token/get"
 
-    base_string = f"{PARTNER_ID}{path}{timestamp}{PARTNER_ID}{shop_id}{code}"
+    base_string = f"{PARTNER_ID}{path}{timestamp}"
     sign = hmac.new(PARTNER_KEY.encode('utf-8'), base_string.encode('utf-8'), hashlib.sha256).hexdigest()
 
-    url = f"https://partner.shopeemobile.com{path}"
+    url = (
+        f"https://partnertest-stable.shopeemobile.com{path}"
+        f"?partner_id={PARTNER_ID}"
+        f"&timestamp={timestamp}"
+        f"&sign={sign}"
+    )
+
     payload = {
         "code": code,
         "partner_id": PARTNER_ID,
         "shop_id": int(shop_id),
-        "sign": sign,
-        "timestamp": timestamp
     }
 
     async with httpx.AsyncClient() as client:
