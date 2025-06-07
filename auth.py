@@ -13,14 +13,14 @@ REDIRECT_URL = os.getenv("REDIRECT_URL")
 AUTH_BASE_URL = "https://partner.test-stable.shopeemobile.com"
 
 def generate_auth_url():
-    """สร้าง URL เพื่อให้ Seller กด Login"""
+    base_url = "https://partner.test-stable.shopeemobile.com/api/v2/shop/auth_partner"
     timestamp = int(time.time())
     path = "/api/v2/shop/auth_partner"
-
+    
     base_string = f"{PARTNER_ID}{path}{timestamp}"
     sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
 
-    return f"{AUTH_BASE_URL}{path}?partner_id={PARTNER_ID}&timestamp={timestamp}&sign={sign}&redirect={REDIRECT_URL}"
+    return f"{base_url}?partner_id={PARTNER_ID}&timestamp={timestamp}&sign={sign}&redirect={REDIRECT_URL}"
 
 def exchange_token(code, shop_id):
     """แลกรับ Access Token ด้วย code + shop_id"""
