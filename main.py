@@ -22,7 +22,7 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/")
 async def login_page():
     timestamp = int(time.time())
-    base_string = f"{PARTNER_ID}{REDIRECT_URL}{timestamp}"
+    base_string = f"{PARTNER_ID}/api/v2/shop/auth_partner{timestamp}"
     sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
 
     login_url = (
