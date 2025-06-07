@@ -6,6 +6,9 @@ import time
 import hmac
 import hashlib
 import httpx
+from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
+import requests
+
 
 app = FastAPI()
 
@@ -16,8 +19,8 @@ REDIRECT_URL = os.getenv("REDIRECT_URL")  # example: https://your-app.onrender.c
 
 templates = Jinja2Templates(directory="templates")
 
-@app.get("/", response_class=HTMLResponse)
-async def login_page(request: Request):
+@app.get("/")
+async def login_page():
     timestamp = int(time.time())
     base_string = f"{PARTNER_ID}{REDIRECT_URL}{timestamp}"
     sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
@@ -30,10 +33,7 @@ async def login_page(request: Request):
         f"&redirect={REDIRECT_URL}"
     )
 
-    return templates.TemplateResponse("login.html", {
-        "request": request,
-        "login_url": login_url
-    })
+    return RedirectResponse(requests.get(login_url))
 
 
 @app.get("/callback")
