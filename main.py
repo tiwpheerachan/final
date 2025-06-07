@@ -55,7 +55,7 @@ async def callback(request: Request):
     sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
 
     url = (
-        f"https://partnertest-stable.shopeemobile.com{path}"
+        f"https://partner.test-stable.shopeemobile.com{path}"
         f"?partner_id={PARTNER_ID}"
         f"&timestamp={timestamp}"
         f"&sign={sign}"
