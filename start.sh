@@ -1,2 +1,2 @@
 #!/bin/bash
-uvicorn main:app -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+python main.py

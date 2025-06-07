@@ -23,7 +23,7 @@ async def login_page(request: Request):
     sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
 
     login_url = (
-        f"https://partner.shopeemobile.com/api/v2/shop/auth_partner"
+        f"https://partner.test-stable.shopeemobile.com/api/v2/shop/auth_partner"
         f"?partner_id={PARTNER_ID}"
         f"&timestamp={timestamp}"
         f"&sign={sign}"
