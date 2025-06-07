@@ -33,7 +33,7 @@ async def login_page():
         f"&redirect={REDIRECT_URL}"
     )
 
-    return RedirectResponse(requests.get(login_url))
+    return RedirectResponse(requests.get(login_url).text)
 
 
 @app.get("/callback")
