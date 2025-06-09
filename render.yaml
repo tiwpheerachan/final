@@ -1,18 +1,18 @@
 services:
   - type: web
-    name: shopee-auth
+    name: shopee-auth-production
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: bash start.sh
     envVars:
       - key: PARTNER_ID
-        value: "1280109"  # ✅ UPDATED
+        value: "2011520"  # ✅ LIVE Partner ID
       - key: PARTNER_KEY
-        value: "5a4e6e4c4d4375464c57506b7a42775a77466d686c534255574267514f494a54"  # ✅ UPDATED
+        value: "707378444d6c6652564a427658499647f7617a4f6a75487069547745746e6b4b"  # ✅ LIVE Partner Key
       - key: REDIRECT_URL
-        value: "https://final-e74d.onrender.com"
+        value: "https://final-e74d.onrender.com/callback"
       - key: DB_HOST
-        value: "db.cidpacmaoaieyhgagmen.supabase.co"
+        value: "cidpacmaoaieyhgagmen.supabase.co"
       - key: DB_PORT
         value: "5432"
       - key: DB_NAME
@@ -23,20 +23,20 @@ services:
         value: "S4GDQ1yBiPY56MV0"
 
   - type: cron
-    name: shopee-cron
+    name: shopee-token-refresh
     env: python
-    schedule: "*/30 * * * *"
+    schedule: "*/30 * * * *"  # ทุก 30 นาที
     buildCommand: pip install -r requirements.txt
     startCommand: python refresh_loop.py
     envVars:
       - key: PARTNER_ID
-        value: "1280109"  # ✅ UPDATED
+        value: "2011520"
       - key: PARTNER_KEY
-        value: "5a4e6e4c4d4375464c57506b7a42775a77466d686c534255574267514f494a54"  # ✅ UPDATED
+        value: "707378444d6c6652564a427658499647f7617a4f6a75487069547745746e6b4b"
       - key: REDIRECT_URL
-        value: "https://final-e74d.onrender.com"
+        value: "https://final-e74d.onrender.com/callback"
       - key: DB_HOST
-        value: "db.cidpacmaoaieyhgagmen.supabase.co"
+        value: "cidpacmaoaieyhgagmen.supabase.co"
       - key: DB_PORT
         value: "5432"
       - key: DB_NAME

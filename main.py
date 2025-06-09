@@ -6,26 +6,30 @@ import time
 import hmac
 import hashlib
 import requests
+from dotenv import load_dotenv
+
+load_dotenv(".env.production")
 
 app = FastAPI()
-
-# ✅ Shopee App ของคุณเอง
-PARTNER_ID = 1280109
-PARTNER_KEY = "5a4e6e4c4d4375464c57506b7a42775a77466d686c534255574267514f494a54"
-REDIRECT_URL = "https://final-e74d.onrender.com/callback"
-
 templates = Jinja2Templates(directory="templates")
+
+# โหลดค่าจาก .env.production
+PARTNER_ID = int(os.getenv("PARTNER_ID"))
+PARTNER_KEY = os.getenv("PARTNER_KEY")
+REDIRECT_URL = os.getenv("REDIRECT_URL")
+
+# 🌐 Shopee Production API
+BASE_URL = "https://partner.shopeemobile.com"
 
 @app.get("/", response_class=HTMLResponse)
 async def login_page(request: Request):
     timestamp = int(time.time())
     path = "/api/v2/shop/auth_partner"
-
     base_string = f"{PARTNER_ID}{path}{timestamp}"
     sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
 
     login_url = (
-        f"https://partner.test-stable.shopeemobile.com{path}"
+        f"{BASE_URL}{path}"
         f"?partner_id={PARTNER_ID}"
         f"&timestamp={timestamp}"
         f"&sign={sign}"
@@ -36,7 +40,6 @@ async def login_page(request: Request):
         "request": request,
         "login_url": login_url
     })
-
 
 @app.get("/callback")
 async def callback(request: Request):
@@ -52,7 +55,7 @@ async def callback(request: Request):
     sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
 
     url = (
-        f"https://partner.test-stable.shopeemobile.com{path}"
+        f"{BASE_URL}{path}"
         f"?partner_id={PARTNER_ID}"
         f"&timestamp={timestamp}"
         f"&sign={sign}"
@@ -63,9 +66,6 @@ async def callback(request: Request):
         "partner_id": PARTNER_ID,
         "shop_id": int(shop_id),
     }
-
-    print("Token URL:", url)
-    print("Payload:", payload)
 
     response = requests.post(url, json=payload)
 
@@ -82,4 +82,4 @@ async def callback(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=10000)
+    uvicorn.run("main_production:app", host="0.0.0.0", port=10000)

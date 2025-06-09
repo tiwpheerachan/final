@@ -26,3 +26,13 @@ def get_connection():
     except Exception as e:
         print("❌ เชื่อมต่อฐานข้อมูลไม่สำเร็จ:", e)
         return None
+
+# ✅ ทดสอบการเชื่อมต่อฐานข้อมูล
+if __name__ == "__main__":
+    conn = get_connection()
+    if conn:
+        cur = conn.cursor()
+        cur.execute("SELECT NOW();")
+        print("✅ เวลาปัจจุบันจากฐานข้อมูล:", cur.fetchone())
+        cur.close()
+        conn.close()
