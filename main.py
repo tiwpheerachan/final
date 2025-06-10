@@ -6,20 +6,30 @@ import time
 import hmac
 import hashlib
 import requests
+import psycopg2
 from dotenv import load_dotenv
+from datetime import datetime
 
+# โหลด .env
 load_dotenv(".env.production")
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-# โหลดค่าจาก .env.production
+# โหลดค่าจาก ENV
 PARTNER_ID = int(os.getenv("PARTNER_ID"))
 PARTNER_KEY = os.getenv("PARTNER_KEY")
 REDIRECT_URL = os.getenv("REDIRECT_URL")
-
-# 🌐 Shopee Production API
 BASE_URL = "https://partner.shopeemobile.com"
+
+# 🧠 Database Connection (Supabase / PostgreSQL)
+DB_CONFIG = {
+    "host": os.getenv("DB_HOST"),
+    "port": os.getenv("DB_PORT"),
+    "dbname": os.getenv("DB_NAME"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+}
 
 @app.get("/", response_class=HTMLResponse)
 async def login_page(request: Request):
@@ -75,11 +85,53 @@ async def callback(request: Request):
             "details": response.text
         })
 
+    data = response.json().get("data", {})
+
+    # ✅ บันทึก Token ลง DB
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS shopee_tokens (
+                shop_id BIGINT PRIMARY KEY,
+                access_token TEXT,
+                refresh_token TEXT,
+                expire_in INTEGER,
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        cursor.execute("""
+            INSERT INTO shopee_tokens (shop_id, access_token, refresh_token, expire_in, last_updated)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (shop_id) DO UPDATE
+            SET access_token = EXCLUDED.access_token,
+                refresh_token = EXCLUDED.refresh_token,
+                expire_in = EXCLUDED.expire_in,
+                last_updated = CURRENT_TIMESTAMP
+        """, (
+            shop_id,
+            data.get("access_token"),
+            data.get("refresh_token"),
+            data.get("expire_in"),
+            datetime.utcnow()
+        ))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print(f"✅ Token saved for shop_id {shop_id}")
+
+    except Exception as db_err:
+        return JSONResponse(status_code=500, content={"error": "DB write error", "details": str(db_err)})
+
     return {
         "message": "✅ Access Token Retrieved!",
-        "data": response.json()
+        "data": data
     }
 
+# 🟢 LOCAL ONLY: ใช้ตอนรัน dev
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main_production:app", host="0.0.0.0", port=10000)
+    uvicorn.run("main:app", host="0.0.0.0", port=10000)

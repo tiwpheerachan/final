@@ -25,9 +25,9 @@ services:
   - type: cron
     name: shopee-token-refresh
     env: python
-    schedule: "*/30 * * * *"  # ทุก 30 นาที
+    schedule: "*/30 * * * *"  # 🔄 รันทุก 30 นาที
     buildCommand: pip install -r requirements.txt
-    startCommand: python refresh_loop.py
+    startCommand: python refresh_token_cron.py  # ✅ ใช้ไฟล์ที่สร้างไว้
     envVars:
       - key: PARTNER_ID
         value: "2011520"
