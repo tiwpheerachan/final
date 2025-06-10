@@ -6,30 +6,27 @@ import time
 import hmac
 import hashlib
 import requests
-import psycopg2
-from dotenv import load_dotenv
 from datetime import datetime
+from dotenv import load_dotenv
+from supabase import create_client, Client
 
-# ✅ โหลด .env (Render ใช้ .env.production)
+# ✅ โหลด ENV
 load_dotenv(".env.production")
 
+# ✅ FastAPI app
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
-# ✅ โหลดค่าจาก ENV
+# ✅ Shopee API Config
 PARTNER_ID = int(os.getenv("PARTNER_ID"))
 PARTNER_KEY = os.getenv("PARTNER_KEY")
 REDIRECT_URL = os.getenv("REDIRECT_URL")
 BASE_URL = "https://partner.shopeemobile.com"
 
-# ✅ Database Config (Supabase / PostgreSQL)
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST"),
-    "port": os.getenv("DB_PORT"),
-    "dbname": os.getenv("DB_NAME"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-}
+# ✅ Supabase SDK Init
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 @app.get("/", response_class=HTMLResponse)
 async def login_page(request: Request):
@@ -88,47 +85,22 @@ async def callback(request: Request):
 
         data = response.json().get("data", {})
 
-        # ✅ บันทึกลงฐานข้อมูล
+        # ✅ Insert to Supabase
         try:
-            conn = psycopg2.connect(**DB_CONFIG)
-            cursor = conn.cursor()
+            insert_response = supabase.table("shopee_tokens").upsert({
+                "shop_id": int(shop_id),
+                "access_token": data.get("access_token"),
+                "refresh_token": data.get("refresh_token"),
+                "expire_in": data.get("expire_in"),
+                "last_updated": datetime.utcnow().isoformat()
+            }).execute()
 
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS shopee_tokens (
-                    shop_id BIGINT PRIMARY KEY,
-                    access_token TEXT,
-                    refresh_token TEXT,
-                    expire_in INTEGER,
-                    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-
-            cursor.execute("""
-                INSERT INTO shopee_tokens (shop_id, access_token, refresh_token, expire_in, last_updated)
-                VALUES (%s, %s, %s, %s, %s)
-                ON CONFLICT (shop_id) DO UPDATE
-                SET access_token = EXCLUDED.access_token,
-                    refresh_token = EXCLUDED.refresh_token,
-                    expire_in = EXCLUDED.expire_in,
-                    last_updated = CURRENT_TIMESTAMP
-            """, (
-                shop_id,
-                data.get("access_token"),
-                data.get("refresh_token"),
-                data.get("expire_in"),
-                datetime.utcnow()
-            ))
-
-            conn.commit()
-            cursor.close()
-            conn.close()
-
-            print(f"✅ Token saved for shop_id {shop_id}")
+            print(f"✅ Token saved to Supabase for shop_id {shop_id}")
 
         except Exception as db_err:
-            print("❌ DB Error:", db_err)
+            print("❌ Supabase DB Error:", db_err)
             return JSONResponse(status_code=500, content={
-                "error": "DB write error",
+                "error": "Supabase write error",
                 "details": str(db_err)
             })
 
@@ -144,7 +116,7 @@ async def callback(request: Request):
             "details": str(e)
         })
 
-# 🟢 รันบน local เท่านั้น
+# ✅ Dev only: run with `python main.py`
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=10000)
