@@ -2,32 +2,8 @@ services:
   - type: web
     name: shopee-auth-production
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: python -m pip install --upgrade pip && pip install -r requirements.txt
     startCommand: bash start.sh
-    envVars:
-      - key: PARTNER_ID
-        value: "2011520"  # ✅ LIVE Partner ID
-      - key: PARTNER_KEY
-        value: "707378444d6c6652564a427658499647f7617a4f6a75487069547745746e6b4b"  # ✅ LIVE Partner Key
-      - key: REDIRECT_URL
-        value: "https://final-e74d.onrender.com/callback"
-      - key: DB_HOST
-        value: "cidpacmaoaieyhgagmen.supabase.co"
-      - key: DB_PORT
-        value: "5432"
-      - key: DB_NAME
-        value: "postgres"
-      - key: DB_USER
-        value: "postgres"
-      - key: DB_PASSWORD
-        value: "S4GDQ1yBiPY56MV0"
-
-  - type: cron
-    name: shopee-token-refresh
-    env: python
-    schedule: "*/30 * * * *"  # 🔄 รันทุก 30 นาที
-    buildCommand: pip install -r requirements.txt
-    startCommand: python refresh_token_cron.py  # ✅ ใช้ไฟล์ที่สร้างไว้
     envVars:
       - key: PARTNER_ID
         value: "2011520"
@@ -45,3 +21,31 @@ services:
         value: "postgres"
       - key: DB_PASSWORD
         value: "S4GDQ1yBiPY56MV0"
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpZHBhY21hb2FpZXloZ2FnbWVuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTMwMDA3MiwiZXhwIjoyMDY0ODc2MDcyfQ.ZXi9y34Ks2odxsFSthqJ-QotiBNYVV4S9SRO9tQNReo"
+
+  - type: cron
+    name: shopee-token-refresh
+    env: python
+    schedule: "*/30 * * * *"
+    buildCommand: python -m pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: python refresh_token_cron.py
+    envVars:
+      - key: PARTNER_ID
+        value: "2011520"
+      - key: PARTNER_KEY
+        value: "707378444d6c6652564a427658499647f7617a4f6a75487069547745746e6b4b"
+      - key: REDIRECT_URL
+        value: "https://final-e74d.onrender.com/callback"
+      - key: DB_HOST
+        value: "cidpacmaoaieyhgagmen.supabase.co"
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_NAME
+        value: "postgres"
+      - key: DB_USER
+        value: "postgres"
+      - key: DB_PASSWORD
+        value: "S4GDQ1yBiPY56MV0"
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpZHBhY21hb2FpZXloZ2FnbWVuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTMwMDA3MiwiZXhwIjoyMDY0ODc2MDcyfQ.ZXi9y34Ks2odxsFSthqJ-QotiBNYVV4S9SRO9tQNReo"

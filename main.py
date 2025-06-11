@@ -8,11 +8,10 @@ import hashlib
 import requests
 from datetime import datetime
 from dotenv import load_dotenv
-from supabase import create_client, Client
-
+from supabase import create_client
 
 # ✅ โหลด ENV
-load_dotenv(".env.production")
+load_dotenv()
 
 # ✅ FastAPI app
 app = FastAPI()
@@ -25,10 +24,9 @@ REDIRECT_URL = os.getenv("REDIRECT_URL")
 BASE_URL = "https://partner.shopeemobile.com"
 
 # ✅ Supabase SDK Init
-SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_URL = f"https://{os.getenv('DB_HOST')}"  # ใช้ HOST จาก env
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-
+supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
 @app.get("/", response_class=HTMLResponse)
 async def login_page(request: Request):
@@ -49,6 +47,7 @@ async def login_page(request: Request):
         "request": request,
         "login_url": login_url
     })
+
 
 @app.get("/callback")
 async def callback(request: Request):
@@ -87,9 +86,9 @@ async def callback(request: Request):
 
         data = response.json().get("data", {})
 
-        # ✅ Insert to Supabase
+        # ✅ บันทึกลง Supabase
         try:
-            insert_response = supabase.table("shopee_tokens").upsert({
+            supabase.table("shopee_tokens").upsert({
                 "shop_id": int(shop_id),
                 "access_token": data.get("access_token"),
                 "refresh_token": data.get("refresh_token"),
@@ -100,7 +99,7 @@ async def callback(request: Request):
             print(f"✅ Token saved to Supabase for shop_id {shop_id}")
 
         except Exception as db_err:
-            print("❌ Supabase DB Error:", db_err)
+            print("❌ Supabase write error:", db_err)
             return JSONResponse(status_code=500, content={
                 "error": "Supabase write error",
                 "details": str(db_err)
@@ -112,13 +111,14 @@ async def callback(request: Request):
         }
 
     except Exception as e:
-        print("❌ เกิดข้อผิดพลาดใน /callback:", e)
+        print("❌ Unexpected error:", e)
         return JSONResponse(status_code=500, content={
             "error": "Unexpected error in /callback",
             "details": str(e)
         })
 
-# ✅ Dev only: run with `python main.py`
+
+# ✅ รัน Local
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=10000)
