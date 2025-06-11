@@ -172,6 +172,11 @@ async def callback(request: Request):
             "details": str(e)
         })
 
+# ✅ วางตรงนี้! ด้านนอก callback()
+@app.get("/orders")
+def get_orders():
+    from get_order_list import get_order_list
+    return get_order_list()
 
 if __name__ == "__main__":
     import uvicorn
