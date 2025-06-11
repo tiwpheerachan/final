@@ -98,12 +98,14 @@ async def callback(request: Request):
         print(f"✅ Full API Response: {response_json}")
         
         # ตรวจสอบโครงสร้างของ response
-        if "error" in response_json:
+        # ตรวจสอบโครงสร้างของ response
+        if response_json.get("error"):
             print(f"❌ API returned error: {response_json['error']}")
             return JSONResponse(status_code=400, content={
                 "error": "API returned error",
                 "details": response_json
             })
+
             
         data = response_json["data"] if "data" in response_json else response_json
         
