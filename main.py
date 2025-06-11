@@ -175,8 +175,12 @@ async def callback(request: Request):
 # ✅ วางตรงนี้! ด้านนอก callback()
 @app.get("/orders")
 def get_orders():
-    from get_order_list import get_order_list
-    return get_order_list()
+    from shopee_fetcher import get_order_list  # ✅ ชื่อไฟล์จริง
+    return get_order_list(
+        access_token=os.getenv("ACCESS_TOKEN"),  # ✅ จาก .env
+        shop_id=os.getenv("SHOP_ID"),
+        time_gap_seconds=3600
+    )
 
 if __name__ == "__main__":
     import uvicorn
