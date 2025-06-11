@@ -105,7 +105,7 @@ async def callback(request: Request):
                 "details": response_json
             })
             
-        data = response_json.get("data", {})
+        data = response_json["data"] if "data" in response_json else response_json
         
         # ตรวจสอบว่ามีข้อมูล token หรือไม่
         if not data:
