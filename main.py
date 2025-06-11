@@ -10,6 +10,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from supabase import create_client, Client
 
+
 # ✅ โหลด ENV
 load_dotenv(".env.production")
 
@@ -27,6 +28,7 @@ BASE_URL = "https://partner.shopeemobile.com"
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
 
 @app.get("/", response_class=HTMLResponse)
 async def login_page(request: Request):
