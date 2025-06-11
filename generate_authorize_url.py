@@ -5,14 +5,18 @@ import hashlib
 import os
 from dotenv import load_dotenv
 
-# ✅ โหลดค่าจาก .env หรือกำหนดตรงนี้
+# ✅ โหลด .env
 load_dotenv()
 
-# กำหนดค่าจาก Shopee Console ของคุณ
-partner_id = os.getenv("PARTNER_ID") or "2011520"
-partner_key = os.getenv("PARTNER_KEY") or "707378444d6c6652564a4276584969477f6617a4f6a75487069547745746e6b4b"
-redirect = os.getenv("REDIRECT_URL") or "https://final-e74d.onrender.com/callback"
+# ✅ ดึงค่าจาก .env
+partner_id = os.getenv("PARTNER_ID")
+partner_key = os.getenv("PARTNER_KEY")
+redirect = os.getenv("REDIRECT_URL")
 path = "/api/v2/shop/auth_partner"
+
+# ✅ ตรวจสอบค่าที่จำเป็น
+if not all([partner_id, partner_key, redirect]):
+    raise ValueError("❌ โปรดตรวจสอบว่า PARTNER_ID, PARTNER_KEY และ REDIRECT_URL ถูกตั้งค่าไว้ใน .env")
 
 # ✅ สร้าง timestamp และ sign
 timestamp = int(time.time())

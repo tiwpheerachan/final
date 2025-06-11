@@ -7,7 +7,7 @@ import os
 # ✅ โหลดค่าจาก ENV
 PARTNER_ID = os.getenv("PARTNER_ID") or "2011520"
 PARTNER_KEY = os.getenv("PARTNER_KEY") or "707378444d6c6652564a427658499647f7617a4f6a75487069547745746e6b4b"
-BASE_URL = "https://partner.shopee.com"
+BASE_URL = "https://partner.shopeemobile.com"  
 
 def make_signature(partner_id, path, timestamp, access_token, shop_id, partner_key):
     base_string = f"{partner_id}{path}{timestamp}{access_token}{shop_id}"

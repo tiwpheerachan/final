@@ -2,16 +2,28 @@ import os
 import time
 import psycopg2
 from dotenv import load_dotenv
-from shopee_fetcher import get_order_list
+from supabase import create_client
+from get_order_list import get_order_list  # ✅ ตรวจสอบให้ตรงชื่อไฟล์จริง
 
-# ✅ โหลด environment variables
+# ✅ โหลด .env
 load_dotenv()
 
-# ------------------ Shopee Auth ------------------ #
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-SHOP_ID = os.getenv("SHOP_ID")
+# ✅ ตั้งค่า Supabase SDK
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-# ------------------ Connect to Supabase PostgreSQL ------------------ #
+# ✅ ดึง access_token + shop_id ล่าสุด
+def get_latest_token():
+    try:
+        result = supabase.table("shopee_tokens").select("*").order("last_updated", desc=True).limit(1).execute()
+        row = result.data[0]
+        return row["access_token"], row["shop_id"]
+    except Exception as e:
+        print("❌ Error loading token:", e)
+        return None, None
+
+# ✅ เชื่อมต่อ Supabase DB
 def get_db_connection():
     return psycopg2.connect(
         host=os.getenv("DB_HOST"),
@@ -21,23 +33,24 @@ def get_db_connection():
         password=os.getenv("DB_PASSWORD")
     )
 
-# ------------------ Fetch Shopee Orders ------------------ #
+# ✅ ดึงคำสั่งซื้อจาก Shopee API
 def fetch_shopee_orders():
+    access_token, shop_id = get_latest_token()
+    if not access_token or not shop_id:
+        print("❌ Missing access_token or shop_id")
+        return []
+
     try:
-        response = get_order_list(
-            access_token=ACCESS_TOKEN,
-            shop_id=SHOP_ID,
-            time_gap_seconds=3600
-        )
+        response = get_order_list(access_token=access_token, shop_id=shop_id, time_gap_seconds=86400)
         if response.get("error"):
-            print(f"❌ Shopee API Error: {response['message']}")
+            print(f"❌ API Error: {response['error']}")
             return []
         return response.get("response", {}).get("order_list", [])
     except Exception as e:
         print("❌ Error fetching orders:", e)
         return []
 
-# ------------------ Insert Orders to Supabase ------------------ #
+# ✅ บันทึกข้อมูลลง Supabase Table
 def insert_orders_to_db(orders):
     if not orders:
         print("⚠️ No orders to insert.")
@@ -49,14 +62,18 @@ def insert_orders_to_db(orders):
 
         for order in orders:
             cursor.execute("""
-                INSERT INTO orders (order_id, buyer_username, total_amount, order_status)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (order_id) DO NOTHING
+                INSERT INTO orders (order_sn, shop_id, region, currency, cod, order_status, create_time, update_time)
+                VALUES (%s, %s, %s, %s, %s, %s, to_timestamp(%s), to_timestamp(%s))
+                ON CONFLICT (order_sn) DO NOTHING;
             """, (
                 order["order_sn"],
-                order.get("buyer_username", "unknown"),
-                float(order.get("total_amount", 0)),
-                order.get("order_status", "unknown")
+                order.get("shop_id"),
+                order.get("region"),
+                order.get("currency"),
+                order.get("cod", False),
+                order.get("order_status"),
+                order.get("create_time"),
+                order.get("update_time")
             ))
 
         conn.commit()
@@ -67,15 +84,7 @@ def insert_orders_to_db(orders):
     except Exception as e:
         print("❌ Error inserting into DB:", e)
 
-# ------------------ Optional Loop (if not using cron) ------------------ #
-def refresh_loop(interval=1800):
-    while True:
-        print("🔄 Fetching Shopee orders...")
-        orders = fetch_shopee_orders()
-        insert_orders_to_db(orders)
-        time.sleep(interval)
-
-# ✅ เรียกใช้ครั้งเดียว (ใช้ใน Cron job)
+# ✅ เรียกใช้เมื่อ run script
 if __name__ == "__main__":
     orders = fetch_shopee_orders()
     insert_orders_to_db(orders)

@@ -1,32 +1,44 @@
-# ✅ get_order_list.py
-import time, hmac, hashlib, os, requests
+import time
+import hmac
+import hashlib
+import os
+import requests
 from dotenv import load_dotenv
+
+# ✅ Load env
 load_dotenv()
 
-def get_order_list():
+BASE_URL = "https://partner.shopeemobile.com"
+PARTNER_ID = os.getenv("PARTNER_ID")
+PARTNER_KEY = os.getenv("PARTNER_KEY")
+
+assert PARTNER_ID and PARTNER_KEY, "Missing Shopee credentials"
+
+def get_order_list(access_token, shop_id, time_gap_seconds=86400):
     path = "/api/v2/order/get_order_list"
-    partner_id = os.getenv("PARTNER_ID")
-    partner_key = os.getenv("PARTNER_KEY")
-    access_token = os.getenv("ACCESS_TOKEN")
-    shop_id = os.getenv("SHOP_ID")
     timestamp = int(time.time())
 
-    base_string = f"{partner_id}{path}{timestamp}{access_token}{shop_id}"
-    sign = hmac.new(partner_key.encode(), base_string.encode(), hashlib.sha256).hexdigest()
+    shop_id = str(shop_id).strip()  # ✅ ป้องกันปัญหาความผิดพลาด
+    base_string = f"{PARTNER_ID}{path}{timestamp}{access_token}{shop_id}"
+    sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
 
     url = (
-        f"https://partner.shopeemobile.com{path}?"
-        f"partner_id={partner_id}&timestamp={timestamp}"
-        f"&access_token={access_token}&shop_id={shop_id}&sign={sign}"
+        f"{BASE_URL}{path}"
+        f"?partner_id={PARTNER_ID}"
+        f"&timestamp={timestamp}"
+        f"&access_token={access_token}"
+        f"&shop_id={shop_id}"
+        f"&sign={sign}"
     )
 
     payload = {
         "time_range_field": "create_time",
-        "page_size": 10,
-        "order_status": "COMPLETED",
-        "create_time_from": int(time.time()) - 86400,
-        "create_time_to": int(time.time())
+        "time_from": timestamp - time_gap_seconds,
+        "time_to": timestamp,
+        "page_size": 20,
+        "order_status": "ALL"
     }
 
-    response = requests.post(url, json=payload)
+    headers = {"Content-Type": "application/json"}
+    response = requests.post(url, json=payload, headers=headers)
     return response.json()
