@@ -29,6 +29,14 @@ SUPABASE_URL = f"https://{os.getenv('DB_HOST')}"  # ใช้ HOST จาก env
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
+# ✅ ฟังก์ชันสำหรับแปลง timestamp ใน template
+def format_datetime_filter(value):
+    try:
+        return datetime.fromtimestamp(value).strftime('%Y-%m-%d %H:%M:%S')
+    except:
+        return value
+templates.env.filters['datetime'] = format_datetime_filter
+
 @app.get("/", response_class=HTMLResponse)
 async def login_page(request: Request):
     timestamp = int(time.time())
@@ -49,14 +57,11 @@ async def login_page(request: Request):
         "login_url": login_url
     })
 
-
 @app.get("/callback")
 async def callback(request: Request):
     try:
         code = request.query_params.get("code")
         shop_id = request.query_params.get("shop_id")
-
-        print(f"✅ Received callback with code: {code} and shop_id: {shop_id}")
 
         if not code or not shop_id:
             return JSONResponse(status_code=400, content={"error": "Missing code or shop_id"})
@@ -79,61 +84,28 @@ async def callback(request: Request):
             "shop_id": int(shop_id),
         }
 
-        print(f"✅ Sending request to Shopee API: {url}")
-        print(f"✅ Payload: {payload}")
-
         response = requests.post(url, json=payload)
-        
-        print(f"✅ Shopee API response status: {response.status_code}")
-        
         if response.status_code != 200:
-            print(f"❌ API Error: {response.text}")
             return JSONResponse(status_code=response.status_code, content={
                 "error": "Failed to get token",
                 "details": response.text
             })
 
-        # แสดงข้อมูลทั้งหมดที่ได้รับจาก API เพื่อ debug
         response_json = response.json()
-        print(f"✅ Full API Response: {response_json}")
-        
-        # ตรวจสอบโครงสร้างของ response
-        # ตรวจสอบโครงสร้างของ response
         if response_json.get("error"):
-            print(f"❌ API returned error: {response_json['error']}")
             return JSONResponse(status_code=400, content={
                 "error": "API returned error",
                 "details": response_json
             })
 
-            
-        data = response_json["data"] if "data" in response_json else response_json
-        
-        # ตรวจสอบว่ามีข้อมูล token หรือไม่
-        if not data:
-            print("❌ No data in API response")
-            return JSONResponse(status_code=400, content={
-                "error": "No data in API response",
-                "response": response_json
-            })
-            
-        # ตรวจสอบค่า token ที่ได้รับ
+        data = response_json["data"]
         access_token = data.get("access_token")
         refresh_token = data.get("refresh_token")
         expire_in = data.get("expire_in")
-        
-        print(f"✅ Access Token: {access_token[:10]}... (truncated)")
-        print(f"✅ Refresh Token: {refresh_token[:10]}... (truncated)" if refresh_token else "❌ No refresh_token")
-        print(f"✅ Expire In: {expire_in}" if expire_in else "❌ No expire_in")
-        
-        if not access_token:
-            print("❌ Missing access_token in API response")
-            return JSONResponse(status_code=400, content={
-                "error": "Missing access_token in API response",
-                "data": data
-            })
 
-        # สร้างข้อมูลที่จะบันทึกลง Supabase
+        if not access_token:
+            return JSONResponse(status_code=400, content={"error": "Missing access_token in API response"})
+
         token_data = {
             "shop_id": int(shop_id),
             "access_token": str(access_token),
@@ -141,22 +113,8 @@ async def callback(request: Request):
             "expire_in": int(expire_in) if expire_in else None,
             "last_updated": datetime.utcnow().isoformat()
         }
-        
-        print(f"✅ Data to be saved to Supabase: {token_data}")
 
-        # ✅ บันทึกลง Supabase
-        try:
-            result = supabase.table("shopee_tokens").upsert(token_data).execute()
-            print(f"✅ Supabase response: {result}")
-            print(f"✅ Token saved to Supabase for shop_id {shop_id}")
-
-        except Exception as db_err:
-            print(f"❌ Supabase write error: {db_err}")
-            traceback.print_exc()  # แสดง stack trace เพื่อ debug
-            return JSONResponse(status_code=500, content={
-                "error": "Supabase write error",
-                "details": str(db_err)
-            })
+        supabase.table("shopee_tokens").upsert(token_data).execute()
 
         return {
             "message": "✅ Access Token Retrieved and Saved!",
@@ -165,22 +123,44 @@ async def callback(request: Request):
         }
 
     except Exception as e:
-        print(f"❌ Unexpected error: {e}")
-        traceback.print_exc()  # แสดง stack trace เพื่อ debug
+        traceback.print_exc()
         return JSONResponse(status_code=500, content={
             "error": "Unexpected error in /callback",
             "details": str(e)
         })
 
-# ✅ วางตรงนี้! ด้านนอก callback()
+# ✅ ดึงคำสั่งซื้อ (API JSON)
 @app.get("/orders")
 def get_orders():
-    from shopee_fetcher import get_order_list  # ✅ ชื่อไฟล์จริง
+    from shopee_fetcher import get_order_list
     return get_order_list(
-        access_token=os.getenv("ACCESS_TOKEN"),  # ✅ จาก .env
+        access_token=os.getenv("ACCESS_TOKEN"),
         shop_id=os.getenv("SHOP_ID"),
-        time_gap_seconds=3600
+        time_gap_seconds=86400
     )
+
+# ✅ แสดงผลคำสั่งซื้อบนเว็บ (Jinja2 UI)
+@app.get("/orders/view", response_class=HTMLResponse)
+async def view_orders(request: Request):
+    try:
+        from shopee_fetcher import get_order_list
+        response = get_order_list(
+            access_token=os.getenv("ACCESS_TOKEN"),
+            shop_id=os.getenv("SHOP_ID"),
+            time_gap_seconds=86400
+        )
+        orders = response.get("order_list", [])
+        return templates.TemplateResponse("orders.html", {
+            "request": request,
+            "orders": orders
+        })
+    except Exception as e:
+        traceback.print_exc()
+        return templates.TemplateResponse("orders.html", {
+            "request": request,
+            "orders": [],
+            "error": str(e)
+        })
 
 if __name__ == "__main__":
     import uvicorn

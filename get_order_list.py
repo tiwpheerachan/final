@@ -18,20 +18,18 @@ def get_order_list(access_token, shop_id, time_gap_seconds=86400):
     path = "/api/v2/order/get_order_list"
     timestamp = int(time.time())
 
-    shop_id = str(shop_id).strip()  # ✅ ป้องกันปัญหาความผิดพลาด
-    base_string = f"{PARTNER_ID}{path}{timestamp}{access_token}{shop_id}"
+    # ✅ shop_id ต้องเป็น int ใน base_string
+    shop_id_int = int(shop_id)
+
+    base_string = f"{PARTNER_ID}{path}{timestamp}{access_token}{shop_id_int}"
     sign = hmac.new(PARTNER_KEY.encode(), base_string.encode(), hashlib.sha256).hexdigest()
 
-    url = (
-        f"{BASE_URL}{path}"
-        f"?partner_id={PARTNER_ID}"
-        f"&timestamp={timestamp}"
-        f"&access_token={access_token}"
-        f"&shop_id={shop_id}"
-        f"&sign={sign}"
-    )
-
-    payload = {
+    params = {
+        "partner_id": PARTNER_ID,
+        "timestamp": timestamp,
+        "access_token": access_token,
+        "shop_id": shop_id_int,
+        "sign": sign,
         "time_range_field": "create_time",
         "time_from": timestamp - time_gap_seconds,
         "time_to": timestamp,
@@ -39,6 +37,6 @@ def get_order_list(access_token, shop_id, time_gap_seconds=86400):
         "order_status": "ALL"
     }
 
-    headers = {"Content-Type": "application/json"}
-    response = requests.post(url, json=payload, headers=headers)
+    url = f"{BASE_URL}{path}"
+    response = requests.get(url, params=params)
     return response.json()

@@ -1,0 +1,27 @@
+<!-- templates/orders.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📦 รายการคำสั่งซื้อ Shopee</title>
+</head>
+<body>
+    <h2>📄 รายการคำสั่งซื้อ 24 ชม. ล่าสุด</h2>
+    {% if orders %}
+        <ul>
+        {% for order in orders %}
+            <li>
+                <strong>Order SN:</strong> {{ order.order_sn }} <br>
+                <strong>สถานะ:</strong> {{ order.order_status }} <br>
+                <strong>เวลาสร้าง:</strong> {{ order.create_time | datetime }} <br>
+                <hr>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>❌ ไม่มีคำสั่งซื้อในช่วงเวลานี้</p>
+        {% if error %}
+            <p style="color: red;">🚨 {{ error }}</p>
+        {% endif %}
+    {% endif %}
+</body>
+</html>
