@@ -185,6 +185,17 @@ def get_orders():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+@app.get("/products", response_class=HTMLResponse)
+async def products_page(request: Request):
+    try:
+        result = supabase.table("products").select("*").limit(100).execute()
+        products = result.data or []
+        return templates.TemplateResponse("products.html", {
+            "request": request,
+            "products": products
+        })
+    except Exception as e:
+        return JSONResponse({"error": str(e)})
 
 from datetime import datetime
 

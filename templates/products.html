@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Product List</title>
+</head>
+<body>
+  <h2>📦 รายการสินค้า Shopee</h2>
+  <table border="1" cellpadding="6">
+    <tr>
+      <th>item_id</th>
+      <th>name</th>
+      <th>sku</th>
+      <th>price</th>
+      <th>stock</th>
+    </tr>
+    {% for p in products %}
+    <tr>
+      <td>{{ p.item_id }}</td>
+      <td>{{ p.name }}</td>
+      <td>{{ p.item_sku }}</td>
+      <td>{{ "%.2f"|format(p.price) }}</td>
+      <td>{{ p.stock }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
